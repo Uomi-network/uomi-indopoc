@@ -254,7 +254,6 @@ def execute_check(inference):
       check_result = False
       print(f"❌ Current token: '{current_token_str}' -> not found in top-{TOP_K_DISPLAY}")
       break
-    print(f"🤖 Current token: '{current_token_str}' -> prob={current_token_prob:.6f}")
 
     # GREEDY selection instead of sampling
     # This ensures full determinism.
