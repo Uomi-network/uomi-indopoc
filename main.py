@@ -323,7 +323,7 @@ def loop_run():
         continue
       node_inferences_db_keys = node_inferences_db.keys()
       for key in node_inferences_db_keys:
-        check_key = str(NODE_ID) + "_" + str(node) + "_" + str(key)
+        check_key = str(NODE_ID) + "_" + str(node) + "_" + key.decode('utf-8')
         if r_checks_db.exists(check_key):
           print("Skipping check: " + str(check_key))
         elif not check_runned_one:

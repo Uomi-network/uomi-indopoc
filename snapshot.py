@@ -2,6 +2,7 @@ import sys
 import time
 import os
 import redis
+import json
 
 # Configurations
 ############################################
@@ -67,15 +68,27 @@ def recap():
   for key in os.listdir(f'{SNAPSHOT_FOLDER}/db_15'):
     total_prompts += 1
   print(f'- Total prompts: {total_prompts}')
+  # Calculate number of valid and invalid checks (reading files in db_13 snapshot)
+  total_check_pass = 0
+  total_check_fail = 0
+  for key in os.listdir(f'{SNAPSHOT_FOLDER}/db_13'):
+    with open(f'{SNAPSHOT_FOLDER}/db_13/{key}', 'r') as f:
+      f_json = json.loads(f.read())
+      if f_json['check_result']:
+        total_check_pass += 1
+      else:
+        total_check_fail += 1
+  print(f'- Total checks passed: {total_check_pass}')
+  print(f'- Total checks failed: {total_check_fail}')
   # Calculate stats for each node
   for node in NODES:
     print(f'- Node: {node}')
-    # Read remaining prompts from db_14 snapshot
-    remaining_prompts = None
+    # Read remaining activities from db_14 snapshot
+    remaining_activities = None
     if os.path.exists(f'{SNAPSHOT_FOLDER}/db_14/{node}'):
       with open(f'{SNAPSHOT_FOLDER}/db_14/{node}', 'r') as f:
-        remaining_prompts = int(f.read())
-    print(f'  - Remaining prompts: {remaining_prompts}/{total_prompts}')
+        remaining_activities = int(f.read())
+    print(f'  - Remaining activities: {remaining_activities}')
   
   print(f'✅ Recap done!')
 
