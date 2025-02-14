@@ -104,6 +104,7 @@ def execute_inference(prompt, key):
   input_ids = tokenizer.encode(prompt, return_tensors="pt").to(device)
 
   execution_data = []
+  first_new_token_id = None
 
   for step in range(MAX_NEW_TOKENS):
     # Forward pass to get raw logits
@@ -163,12 +164,24 @@ def execute_inference(prompt, key):
       "id": selected_token_id,
       "top_k": execution_data_top_k
     })
+    first_new_token_id = selected_token_id if first_new_token_id is None else first_new_token_id
 
   output = tokenizer.decode(input_ids[0], skip_special_tokens=False)
+  output_tokens_all = input_ids[0].tolist()
+  # Remove ids from output_tokens_all before the first new token
+  output_tokens = []
+  first_new_token_found = False
+  for token_id in output_tokens_all:
+    if first_new_token_found:
+      output_tokens.append(token_id)
+    if first_new_token_found == False and token_id == first_new_token_id:
+      first_new_token_found = True
+      output_tokens.append(token_id)
 
   result = {
     "key": key,
     "output": output,
+    "output_tokens": output_tokens,
     "execution_data": execution_data,
     "executed_by": NODE_ID,
     "executed_in": time.time() - time_start
@@ -199,12 +212,10 @@ def execute_check(inference):
   check_data = []
   check_result = True
 
-  # Tokenize inference output
-  # - take the output of the inference and remove all characters before the prompt
-  # NOTE: Consider the prompt can be repeated in the output, so remove it only on start
-  inference_output_without_prompt = inference["output"].split(prompt)[-1]
-  inference_output_tokens = tokenizer.tokenize(inference_output_without_prompt)
-  inference_output = tokenizer.convert_tokens_to_ids(inference_output_tokens)
+  # BACKUP: using string
+  # inference_output_without_prompt = inference["output"].split(prompt)[-1]
+  # inference_output_tokens = tokenizer.tokenize(inference_output_without_prompt)
+  # inference_output = tokenizer.convert_tokens_to_ids(inference_output_tokens)
 
   for step in range(MAX_NEW_TOKENS):
     # Forward pass to get raw logits
@@ -238,7 +249,9 @@ def execute_check(inference):
     # Take the current token from the inference output and check it's probability on the model
     check_data_top_k = []
     current_token_prob = None
-    current_token_id = inference_output[step]
+    # current_token_id = inference_output[step] # BACKUP: using string
+    # calculate step_without_prompt by removing the prompt from the inference_output_tokens
+    current_token_id = inference["output_tokens"][step]
     current_token_str = tokenizer.decode([current_token_id])
     top_probs, top_indices = probs.topk(TOP_K_DISPLAY, dim=-1)
     for rank, (prob, idx) in enumerate(zip(top_probs[0], top_indices[0]), start=1):
@@ -308,6 +321,7 @@ def loop_run():
       prompt = r_prompts_db.get(key).decode('utf-8')
       if r_node_inferences_db.exists(key):
         print("Skipping inference: " + str(key))
+      # BACKUP: using multiple threads
       # elif not prompts_runned_one:
       #   print("Executing inference: " + str(key))
       #   inferences_to_run = (prompt, key)
@@ -321,8 +335,6 @@ def loop_run():
         remaining += 1
 
     # Take list of other nodes from the r_nodes_db
-    # nodes = r_nodes_db.keys()
-    # nodes = [int(node) for node in nodes]
     nodes = [node for node in NODES if node != int(NODE_ID)]
 
     # Loop through the nodes, for each node take its inferences and execute the check
@@ -340,6 +352,7 @@ def loop_run():
         check_key = str(NODE_ID) + "_" + str(node) + "_" + key.decode('utf-8')
         if r_checks_db.exists(check_key):
           print("Skipping check: " + str(check_key))
+        # BACKUP: using multiple threads
         # elif not check_runned_one:
         #   print("Executing check: " + str(check_key))
         #   inference = node_inferences_db.get(key).decode('utf-8')
@@ -354,6 +367,7 @@ def loop_run():
         else:
           remaining += 1
 
+    # BACKUP: using multiple threads
     # # Run the inference and check on two different threads
     # def run_inference(prompt, key):
     #   print("🤖 Executing inference: " + str(key))
