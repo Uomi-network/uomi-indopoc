@@ -6,7 +6,7 @@ import redis
 # Configurations
 ############################################
 
-SNAPSHOT_FOLDER = os.getenv('SNAPSHOT_FOLDER', '/snapshots')
+SNAPSHOT_FOLDER = os.getenv('SNAPSHOT_FOLDER', './snapshots')
 
 REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
 REDIS_PASS = os.getenv('REDIS_PASS', '')
@@ -29,16 +29,17 @@ NODES = [
 ############################################
 
 def snapshot_db(db, snapshot_key):
-  snapshot_file_path = f'{SNAPSHOT_FOLDER}/{snapshot_key}/db_{db}.rdb'
-  os.makedirs(os.path.dirname(snapshot_file_path), exist_ok=True)
-  r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=db, password=REDIS_PASS)
-  r.save()
-  # Move the snapshot to the right folder
-  os.rename('dump.rdb', snapshot_file_path)
-  # Store single datas as txt files
+  snapshot_path = f'{SNAPSHOT_FOLDER}/{snapshot_key}/db_{db}'
+  os.makedirs(snapshot_path, exist_ok=True)
+  try:
+    r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=db, password=REDIS_PASS)
+  except:
+    print(f'❌ Error connecting to Redis DB: {db}')
+    return
+  # Store single datas as files
   for key in r.keys():
-    with open(f'{SNAPSHOT_FOLDER}/{snapshot_key}/db_{db}_{key.decode()}.txt', 'w') as f:
-      f.write(r.get(key).decode())
+    with open(f'{snapshot_path}/{key}', 'w') as f:
+      f.write(r.get(key).decode('utf-8'))
 
 def snapshot():
   snapshot_key = int(time.time())

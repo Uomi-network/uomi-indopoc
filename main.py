@@ -306,7 +306,7 @@ def loop_run():
     # Take list of other nodes from the r_nodes_db
     # nodes = r_nodes_db.keys()
     # nodes = [int(node) for node in nodes]
-    nodes = [node for node in NODES if node != NODE_ID]
+    nodes = [node for node in NODES if node != int(NODE_ID)]
 
     # Loop through the nodes, for each node take its inferences and execute the check
     check_runned_one = False
