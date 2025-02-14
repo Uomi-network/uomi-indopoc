@@ -38,6 +38,7 @@ def snapshot_db(db, snapshot_key):
     return
   # Store single datas as files
   for key in r.keys():
+    key = key.decode('utf-8')
     with open(f'{snapshot_path}/{key}', 'w') as f:
       f.write(r.get(key).decode('utf-8'))
 

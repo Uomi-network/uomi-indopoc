@@ -6,6 +6,7 @@ import base64
 import threading
 import json
 import traceback
+import hashlib
 
 import torch
 import torch.nn.functional as F
@@ -81,8 +82,11 @@ if not SIMULATION_MODE:
 
 # This function generate a unique hash for a given string
 def hash_string(input_string):
-  input_bytes = input_string.encode('utf-8')
-  return base64.b64encode(input_bytes).decode('utf-8')
+  # input_bytes = input_string.encode('utf-8')
+  # return base64.b64encode(input_bytes).decode('utf-8')
+  length = 64
+  hash_object = hashlib.sha256(input_string.encode())
+  return hash_object.hexdigest()[:length]
 
 # This function execute the inference and return the result
 def execute_inference(prompt, key):
