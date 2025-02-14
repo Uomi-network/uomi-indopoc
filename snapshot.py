@@ -54,7 +54,7 @@ def snapshot():
 
   for db in [REDIS_NODES_DB, REDIS_CHECKS_DB, REDIS_COMPLETITION_DB, REDIS_PROMPTS_DB]:
     print(f'- DB: {db}')
-    snapshot_db(db, db != REDIS_PROMPTS_DB)
+    snapshot_db(db, db != REDIS_PROMPTS_DB and db != REDIS_CHECKS_DB)
   for node in NODES:
     print(f'- Node: {node}')
     snapshot_db(node)
@@ -77,6 +77,7 @@ def recap():
       if f_json['check_result']:
         total_check_pass += 1
       else:
+        print(f'❌ Check failed: {f_json["key"]}')
         total_check_fail += 1
   print(f'- Total checks passed: {total_check_pass}')
   print(f'- Total checks failed: {total_check_fail}')

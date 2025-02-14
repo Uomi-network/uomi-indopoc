@@ -164,7 +164,7 @@ def execute_inference(prompt, key):
       "top_k": execution_data_top_k
     })
 
-  output = tokenizer.decode(input_ids[0], skip_special_tokens=True)
+  output = tokenizer.decode(input_ids[0], skip_special_tokens=False)
 
   result = {
     "key": key,
@@ -200,7 +200,9 @@ def execute_check(inference):
   check_result = True
 
   # Tokenize inference output
-  inference_output_without_prompt = inference["output"][len(prompt):]
+  # - take the output of the inference and remove all characters before the prompt
+  # NOTE: Consider the prompt can be repeated in the output, so remove it only on start
+  inference_output_without_prompt = inference["output"].split(prompt)[-1]
   inference_output_tokens = tokenizer.tokenize(inference_output_without_prompt)
   inference_output = tokenizer.convert_tokens_to_ids(inference_output_tokens)
 
@@ -252,6 +254,12 @@ def execute_check(inference):
         break
     if current_token_prob is None:
       check_result = False
+      check_data.append({
+        "str": current_token_str,
+        "prob": current_token_prob,
+        "id": current_token_id,
+        "top_k": check_data_top_k
+      })
       print(f"❌ Current token: '{current_token_str}' -> not found in top-{TOP_K_DISPLAY}")
       break
 
@@ -288,6 +296,8 @@ def loop_run():
   
   try:
     remaining = 0
+    inference_to_run = None
+    check_to_run = None
 
     # Start execution of the inferences (from r_prompts_db) and store the result in the node's db
     # NOTE: Ignore execution if it is already stored in the node's db
@@ -298,6 +308,10 @@ def loop_run():
       prompt = r_prompts_db.get(key).decode('utf-8')
       if r_node_inferences_db.exists(key):
         print("Skipping inference: " + str(key))
+      # elif not prompts_runned_one:
+      #   print("Executing inference: " + str(key))
+      #   inferences_to_run = (prompt, key)
+      #   prompts_runned_one = True
       elif not prompts_runned_one:
         print("Executing inference: " + str(key))
         result = execute_inference(prompt, key)
@@ -326,6 +340,11 @@ def loop_run():
         check_key = str(NODE_ID) + "_" + str(node) + "_" + key.decode('utf-8')
         if r_checks_db.exists(check_key):
           print("Skipping check: " + str(check_key))
+        # elif not check_runned_one:
+        #   print("Executing check: " + str(check_key))
+        #   inference = node_inferences_db.get(key).decode('utf-8')
+        #   check_to_run = (inference, check_key)
+        #   check_runned_one = True
         elif not check_runned_one:
           print("Executing check: " + str(check_key))
           inference = node_inferences_db.get(key).decode('utf-8')
@@ -334,6 +353,26 @@ def loop_run():
           check_runned_one = True
         else:
           remaining += 1
+
+    # # Run the inference and check on two different threads
+    # def run_inference(prompt, key):
+    #   print("🤖 Executing inference: " + str(key))
+    #   result = execute_inference(prompt, key)
+    #   r_node_inferences_db.set(key, result)
+    # def run_check(inference, key):
+    #   print("🤖 Executing check: " + str(key))
+    #   result = execute_check(inference)
+    #   r_checks_db.set(key, result)
+    # threads = []
+    # if inferences_to_run:
+    #   threads.append(threading.Thread(target=run_inference, args=inferences_to_run))
+    # if check_to_run:
+    #   threads.append(threading.Thread(target=run_check, args=check_to_run))
+    # for thread in threads:
+    #   thread.start()
+    # for thread in threads:
+    #   thread.join()
+    # print("🤖 Inference and check completed.")
 
     # Store the node's db in the completition db
     r_completition_db.set(str(NODE_ID), remaining)
@@ -349,8 +388,6 @@ def loop_run():
 
 # Ping
 def loop_ping():
-  print("💬 Node " + str(NODE_ID) + " is looping ping...")
-  
   # Write the node id in the nodes db
   r_nodes_db.set(str(NODE_ID), 1, ex=30)
 
@@ -375,6 +412,8 @@ def setup():
 ############################################
 
 if __name__ == '__main__':
+  print("🚀 Node " + str(NODE_ID) + " is running...")
+
   # Setup
   setup()
 
@@ -384,4 +423,3 @@ if __name__ == '__main__':
   loop_run_thread.start()
   loop_ping_thread.start()
 
-  print("🚀 Node " + str(NODE_ID) + " is running...")
