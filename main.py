@@ -21,7 +21,6 @@ SIMULATION_MODE = False
 NODE_ID = os.getenv('NODE_ID', 1)
 PROMPTS_FILE_PATH = './prompts.txt'
 
-REDIS_RESET = False
 REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
 REDIS_PASS = os.getenv('REDIS_PASS', '')
 REDIS_PORT = 6379
@@ -37,6 +36,15 @@ TEMPERATURE = 1.0
 TOP_P = 1.0
 TOP_K_DISPLAY = 5
 
+NODES = [
+  1, # RTX 4090
+  2, # RTX A6000
+  3, # H100 XMS
+  4, # L40S
+  5, # A100 SXM
+  6, # LOCAL
+]
+
 # Redis Connections
 ############################################
 
@@ -45,13 +53,6 @@ r_checks_db = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_CHECK
 r_completition_db = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_COMPLETITION_DB, password=REDIS_PASS)
 r_prompts_db = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_PROMPTS_DB, password=REDIS_PASS)
 r_node_inferences_db = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_NODE_INFERENCES_DB, password=REDIS_PASS)
-
-if REDIS_RESET:
-  r_nodes_db.flushdb()
-  r_checks_db.flushdb()
-  r_completition_db.flushdb()
-  r_prompts_db.flushdb()
-  r_node_inferences_db.flushdb()
 
 # Setup model
 ############################################
@@ -303,15 +304,20 @@ def loop_run():
         remaining += 1
 
     # Take list of other nodes from the r_nodes_db
-    nodes = r_nodes_db.keys()
-    nodes = [int(node) for node in nodes]
-    nodes = [node for node in nodes if node != NODE_ID]
+    # nodes = r_nodes_db.keys()
+    # nodes = [int(node) for node in nodes]
+    nodes = [node for node in NODES if node != NODE_ID]
 
     # Loop through the nodes, for each node take its inferences and execute the check
     check_runned_one = False
     for node in nodes:
       print("Checking node: " + str(node))
-      node_inferences_db = r_node_inferences_db if node == NODE_ID else redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=node, password=REDIS_PASS)
+      # Try to connect to the node's db, if db not exists, skip the node
+      try:
+        node_inferences_db = r_node_inferences_db if node == NODE_ID else redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=node, password=REDIS_PASS)
+      except:
+        print("Skipping node: " + str(node))
+        continue
       node_inferences_db_keys = node_inferences_db.keys()
       for key in node_inferences_db_keys:
         check_key = str(NODE_ID) + "_" + str(node) + "_" + str(key)
