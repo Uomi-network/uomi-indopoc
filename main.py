@@ -40,7 +40,7 @@ TOP_K_DISPLAY = 5
 NODES = [
   1, # RTX 4090
   2, # RTX A6000
-  3, # H100 XMS
+  3, # H100 SXM
   4, # L40S
   5, # A100 SXM
   6, # LOCAL
@@ -344,6 +344,8 @@ def loop_run():
 
     # Take list of other nodes from the r_nodes_db
     nodes = [node for node in NODES if node != int(NODE_ID)]
+    # Sort nodes randomly
+    random.shuffle(nodes)
 
     # Loop through the nodes, for each node take its inferences and execute the check
     check_runned_one = False
