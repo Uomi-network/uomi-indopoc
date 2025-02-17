@@ -320,9 +320,11 @@ def loop_run():
     prompts_runned_one = False
     r_prompts_db_keys = r_prompts_db.keys()
     r_prompts_db_keys = [key.decode('utf-8') for key in r_prompts_db_keys]
+    r_node_inferences_db_keys = r_node_inferences_db.keys()
+    r_node_inferences_db_keys = [key.decode('utf-8') for key in r_node_inferences_db_keys]
     for key in r_prompts_db_keys:
       prompt = r_prompts_db.get(key).decode('utf-8')
-      if r_node_inferences_db.exists(key):
+      if r_node_inferences_db_keys.__contains__(key):
         print("Skipping inference: " + str(key))
       # BACKUP: using multiple threads
       # elif not prompts_runned_one:
@@ -352,9 +354,11 @@ def loop_run():
         print("Skipping node: " + str(node))
         continue
       node_inferences_db_keys = node_inferences_db.keys()
+      r_checks_db_keys = r_checks_db.keys()
+      r_checks_db_keys = [key.decode('utf-8') for key in r_checks_db_keys]
       for key in node_inferences_db_keys:
         check_key = str(NODE_ID) + "_" + str(node) + "_" + key.decode('utf-8')
-        if r_checks_db.exists(check_key):
+        if r_checks_db_keys.__contains__(check_key):
           print("Skipping check: " + str(check_key))
         # BACKUP: using multiple threads
         # elif not check_runned_one:
@@ -423,10 +427,10 @@ def setup():
   prompts = [inference.rstrip('\n') for inference in prompts]
   # Store every inference in the redis db using the hash_string of the inference as key (if not already stored)
   r_prompts_db_keys = r_prompts_db.keys()
-  r_prompts_db_keys_str = [key.decode('utf-8') for key in r_prompts_db_keys]
+  r_prompts_db_keys = [key.decode('utf-8') for key in r_prompts_db_keys]
   for prompt in prompts:
     prompt_hash = hash_string(prompt)
-    if not r_prompts_db_keys_str.__contains__(prompt_hash):
+    if not r_prompts_db_keys.__contains__(prompt_hash):
       r_prompts_db.set(prompt_hash, prompt)
       print("Stored prompt: " + str(prompt_hash))
     else:
