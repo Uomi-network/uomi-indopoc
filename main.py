@@ -424,6 +424,9 @@ def setup():
     prompt_hash = hash_string(prompt)
     if not r_prompts_db.exists(prompt_hash):
       r_prompts_db.set(prompt_hash, prompt)
+      print("Stored prompt: " + str(prompt_hash))
+    else:
+      print("Skipping prompt: " + str(prompt_hash))
 
 # Main
 ############################################
