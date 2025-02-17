@@ -422,9 +422,11 @@ def setup():
   # Normalize prompts by remove last character if is a new line
   prompts = [inference.rstrip('\n') for inference in prompts]
   # Store every inference in the redis db using the hash_string of the inference as key (if not already stored)
+  r_prompts_db_keys = r_prompts_db.keys()
+  r_prompts_db_keys_str = [key.decode('utf-8') for key in r_prompts_db_keys]
   for prompt in prompts:
     prompt_hash = hash_string(prompt)
-    if not r_prompts_db.exists(prompt_hash):
+    if not r_prompts_db_keys_str.__contains__(prompt_hash):
       r_prompts_db.set(prompt_hash, prompt)
       print("Stored prompt: " + str(prompt_hash))
     else:
