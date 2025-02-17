@@ -335,6 +335,7 @@ def loop_run():
         r_node_inferences_db.set(key, result)
         prompts_runned_one = True
       else:
+        print("Remaining op inference: " + str(remaining))
         remaining += 1
 
     # Take list of other nodes from the r_nodes_db
@@ -368,6 +369,7 @@ def loop_run():
           r_checks_db.set(check_key, check_result)
           check_runned_one = True
         else:
+          print("Remaining op check: " + str(remaining))
           remaining += 1
 
     # BACKUP: using multiple threads
