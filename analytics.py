@@ -34,6 +34,8 @@ def get_execution(key, node):
 
 def main():
   checks = list_checks()
+  error_rates = []
+  position_rates = []
   for check in checks:
     check_data = get_check(check)
     execution_data = get_execution(check_data['key'], check_data['executed_by'])
@@ -60,16 +62,19 @@ def main():
           position = j
           break
       if position != 0:
-        print(f'  -- Position changed on index {i}: {position}')
-        print(f'  -- Check token: {check_token['str']}')
-        print(f'  -- Execution token: {execution_token['str']}')
+        print(f'  -- Position changed on index {i} to position {position}')
       positions.append(position)
       
     error_rate = sum(errors) / len(errors)
+    error_rates.append(error_rate)
     print(f'- Error rate: {error_rate}')
 
     position_rate = sum(positions) / len(positions)
+    position_rates.append(position_rate)
     print(f'- Position rate: {position_rate}')
+  
+  print(f'📈 Average error rate: {sum(error_rates) / len(error_rates)}')
+  print(f'📈 Average position rate: {sum(position_rates) / len(position_rates)}')
 
 
 # Main
