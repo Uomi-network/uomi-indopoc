@@ -107,6 +107,7 @@ def execute_inference(prompt, key):
   first_new_token_id = None
 
   for step in range(MAX_NEW_TOKENS):
+    print(f"Step execute_inference {step + 1}/{MAX_NEW_TOKENS}")
     # Forward pass to get raw logits
     outputs = model(input_ids=input_ids)
     next_token_logits = outputs.logits[:, -1, :]
@@ -218,6 +219,8 @@ def execute_check(inference):
   # inference_output = tokenizer.convert_tokens_to_ids(inference_output_tokens)
 
   for step in range(MAX_NEW_TOKENS):
+    print(f"Step execute_check {step + 1}/{MAX_NEW_TOKENS}")
+
     # Forward pass to get raw logits
     outputs = model(input_ids=input_ids)
     next_token_logits = outputs.logits[:, -1, :]
