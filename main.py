@@ -168,16 +168,19 @@ def execute_inference(prompt, key):
     first_new_token_id = selected_token_id if first_new_token_id is None else first_new_token_id
 
   output = tokenizer.decode(input_ids[0], skip_special_tokens=False)
-  output_tokens_all = input_ids[0].tolist()
-  # Remove ids from output_tokens_all before the first new token
+  # output_tokens_all = input_ids[0].tolist()
+  # # Remove ids from output_tokens_all before the first new token
+  # output_tokens = []
+  # first_new_token_found = False
+  # for token_id in output_tokens_all:
+  #   if first_new_token_found:
+  #     output_tokens.append(token_id)
+  #   if first_new_token_found == False and token_id == first_new_token_id:
+  #     first_new_token_found = True
+  #     output_tokens.append(token_id)
   output_tokens = []
-  first_new_token_found = False
-  for token_id in output_tokens_all:
-    if first_new_token_found:
-      output_tokens.append(token_id)
-    if first_new_token_found == False and token_id == first_new_token_id:
-      first_new_token_found = True
-      output_tokens.append(token_id)
+  for execution_data_step in execution_data:
+    output_tokens.append(execution_data_step["id"])
 
   result = {
     "key": key,
