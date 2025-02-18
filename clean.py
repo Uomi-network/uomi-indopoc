@@ -26,7 +26,7 @@ NODES = [
   6, # LOCAL
 ]
 
-CLEAN_KEY = ''
+CLEAN_KEY = 'e9b08d3217a23e0b020fab8f4ab7ac4ed831f8aa7f0f60daaf3dc1bf00935833'
 
 # Functions
 ############################################

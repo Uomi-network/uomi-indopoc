@@ -310,6 +310,7 @@ def execute_check(inference):
   }
   return json.dumps(result)
 
+cache_index_skipped = None
 def loop_run():
   print("🧠 Node " + str(NODE_ID) + " is looping run...")
   
@@ -325,10 +326,15 @@ def loop_run():
     r_prompts_db_keys = [key.decode('utf-8') for key in r_prompts_db_keys]
     r_node_inferences_db_keys = r_node_inferences_db.keys()
     r_node_inferences_db_keys = [key.decode('utf-8') for key in r_node_inferences_db_keys]
+    index = 0
     for key in r_prompts_db_keys:
+      index += 1
+      if cache_index_skipped is not None and index <= cache_index_skipped:
+        continue
       prompt = r_prompts_db.get(key).decode('utf-8')
       if r_node_inferences_db_keys.__contains__(key):
         print("Skipping inference: " + str(key))
+        cache_index_skipped = index
       # BACKUP: using multiple threads
       # elif not prompts_runned_one:
       #   print("Executing inference: " + str(key))
