@@ -312,6 +312,7 @@ def execute_check(inference):
 
 cache_index_skipped = None
 def loop_run():
+  global cache_index_skipped
   print("🧠 Node " + str(NODE_ID) + " is looping run...")
   
   try:
